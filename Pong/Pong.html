@@ -1,0 +1,202 @@
+﻿<html>
+
+<canvas id = "Game" width = "1200" height = "600"></canvas>
+
+	<script>
+
+		var canvas;
+		var canvasContext;
+		var raioBola = 10;
+		var bolaX = 300;
+		var bolaSpeedX = 5;
+		var bolaY = 200;
+		var bolaSpeedY = 5;
+		var barra1Y = 300;
+		var barra2Y = 300;
+
+		var score1 = 0;
+		var score2 = 0;
+		const PONTOS_VITORIA = 3;
+
+		var telaDeVitoria = false;
+
+		const TAMANHO_BARRA = 100;
+		const LARGURA_BARRA = 10;
+		const ESPESSURA_CONTORNO = 5;
+		const ESPAÇO_FUNDO = 5;
+
+
+		window.onload = function () {
+			var fps = 45;
+
+			console.log("Ola mundo");
+
+			canvas = document.getElementById('Game');
+			canvasContext = canvas.getContext('2d');
+
+			canvasContext.fillStyle = 'black';
+			canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+			canvasContext.fillStyle = 'white';
+			canvasContext.fillRect(ESPESSURA_CONTORNO, ESPESSURA_CONTORNO, canvas.width - (2 * ESPESSURA_CONTORNO), canvas.height - (2 * ESPESSURA_CONTORNO));
+
+			setInterval(function () {
+				desenhaTudo();
+				moverTudo();
+			}, 1000 / fps);
+
+			canvas.addEventListener('mousedown', botaoDoMouse);
+
+			canvas.addEventListener('mousemove',
+				function (evt) {
+					var mousePos = calculateMousePos(evt);
+					barra1Y = mousePos.y - TAMANHO_BARRA / 2;
+					//barra2Y = mousePos.y - TAMANHO_BARRA / 2;
+				}
+			);
+		}
+
+		function calculateMousePos(evt) {
+			console.log("movendo mouse");
+			var rect = canvas.getBoundingClientRect();
+			var root = document.documentElement;
+			var mouseX = evt.clientX - rect.left - root.scrollLeft;
+			var mouseY = evt.clientY - rect.top - root.scrollTop;
+
+			return {
+				x: mouseX,
+				y: mouseY
+			};
+		}
+
+		function botaoDoMouse(evt){
+				if(telaDeVitoria){
+					score1 = 0;
+					score2 = 0;
+					telaDeVitoria = false;
+				}
+		}
+
+		function desenhaTudo() {
+			console.log("desenhando...");
+			
+			//tela branca
+			retanguloColorido(ESPESSURA_CONTORNO, ESPESSURA_CONTORNO, canvas.width - (2 * ESPESSURA_CONTORNO), canvas.height - (2 * ESPESSURA_CONTORNO), 'white');
+			
+			if(telaDeVitoria){
+				if(score1 == PONTOS_VITORIA){
+					canvasContext.fillStyle = 'black';
+					canvasContext.fillText("Clique para jogar....", 100, 110);
+					canvasContext.fillText("Jogador 1 Venceu!", 100, 100);
+				}
+				else if(score2 == PONTOS_VITORIA){
+					canvasContext.fillStyle = 'black';
+					canvasContext.fillText("Clique para jogar....", 100, 110);
+					canvasContext.fillText("Jogador 2 Venceu!", 100, 100);
+				}
+				return;	
+			}
+
+			//barra da esquerda
+			retanguloColorido(ESPAÇO_FUNDO + ESPESSURA_CONTORNO, barra1Y, LARGURA_BARRA, TAMANHO_BARRA, 'black');
+
+			//barra da Direita 
+			retanguloColorido(canvas.width - (ESPAÇO_FUNDO + ESPESSURA_CONTORNO + LARGURA_BARRA), barra2Y, LARGURA_BARRA, TAMANHO_BARRA, 'black');
+
+			//Linha do centro 
+			desenhaListrasVerticais((canvas.width / 2) + ESPESSURA_CONTORNO / 2 , 20, 'black');
+
+			//Bolinha	
+			circuloColorido(bolaX, bolaY, raioBola, 'black');
+
+			canvasContext.fillText( score1, 100, 100);
+			canvasContext.fillText(score2, canvas.width - 100, 100);
+		}
+
+		function circuloColorido(centroX, centroY, raio, cor) {
+			canvasContext.fillStyle = cor;
+			canvasContext.beginPath();
+			canvasContext.arc(centroX, centroY, raio, 0, Math.PI * 2, true);
+			canvasContext.fill();
+		}
+
+		function retanguloColorido(posiX, posiY, tamanhoX, tamanhoY, cor) {
+			canvasContext.fillStyle = cor;
+			canvasContext.fillRect(posiX, posiY, tamanhoX, tamanhoY);
+
+		}
+
+		function desenhaListrasVerticais(posiX, espaço, cor){
+			for(var i = 0; i < canvas.height; i += espaço ){
+				retanguloColorido(posiX, i, ESPESSURA_CONTORNO, espaço/2, cor);
+			}
+		}
+		
+		function movimentoComputador(){
+			var barra2YCentro = barra2Y + (TAMANHO_BARRA / 2);
+			if(barra2YCentro < bolaY - 35){
+				barra2Y += 5;			
+			}
+			else if(barra2YCentro > bolaY + 35){
+				barra2Y -= 5;
+			}
+		}
+
+		function moverTudo() {
+
+			if(telaDeVitoria){
+				return;	
+			}
+
+			movimentoComputador();
+
+			bolaX += bolaSpeedX;
+			
+			//bola atinge o ponto X = tamanho da tela
+			if (bolaX > canvas.width - (raioBola + ESPESSURA_CONTORNO + ESPAÇO_FUNDO)) {
+				if (bolaY > barra2Y && bolaY < barra2Y + TAMANHO_BARRA) {
+					bolaSpeedX = -bolaSpeedX;
+					var deltaY = bolaY - (barra2Y + TAMANHO_BARRA / 2) ;
+					bolaSpeedY = deltaY * 0.35;
+				}
+				else {
+					score1++;
+					resetaBola();
+				}
+			}
+
+			//bola atinge o ponto X = 0
+			if (bolaX < ESPESSURA_CONTORNO + raioBola + ESPAÇO_FUNDO) {
+				if (bolaY > barra1Y && bolaY < barra1Y + TAMANHO_BARRA ) {
+					bolaSpeedX = -bolaSpeedX;
+					var deltaY = bolaY - (barra1Y + TAMANHO_BARRA / 2) ;
+					bolaSpeedY = deltaY * 0.35; 
+				}
+				else {
+					score2++;
+					resetaBola();
+				}
+			}
+
+			bolaY += bolaSpeedY;
+
+			if (bolaY > canvas.height - (raioBola + ESPESSURA_CONTORNO + ESPAÇO_FUNDO)) {
+				bolaSpeedY = -bolaSpeedY;
+			}
+			if (bolaY < raioBola + ESPESSURA_CONTORNO + ESPAÇO_FUNDO) {
+				bolaSpeedY = -bolaSpeedY;
+			}
+		}
+
+		function resetaBola() {
+			if(score1 == PONTOS_VITORIA || score2 == PONTOS_VITORIA){
+				telaDeVitoria = true;
+			}
+
+			bolaSpeedX = -bolaSpeedX;
+			bolaSpeedY = -bolaSpeedY;
+			bolaX = canvas.width / 2;
+			bolaY = canvas.height / 2;
+		}
+	</script>
+</html>
