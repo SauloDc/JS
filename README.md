@@ -1,4 +1,4 @@
-# JS
-My JavaScript files
+# JavaScript
+These are some projects that I developed in JS, just a few simple games that I decided to implement to improve my skills with javascript.
 
-projetos em javascript e html canvas, utilisando a biblioteca gráfica P5.
+These codes within this repository were developed using the P5js library.
